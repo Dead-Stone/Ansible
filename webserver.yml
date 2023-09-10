@@ -1,0 +1,37 @@
+---
+- name: Deploy Web Server
+  hosts: ec2
+  become: yes  # Run tasks as sudo
+  tasks:
+    - name: Install Apache web server
+      apt:
+        name: apache2
+        state: present
+      become: yes
+
+    - name: Create HTML file with dynamic content
+      template:
+        src: index.html.j2
+        dest: /var/www/html/index.html
+      become: yes
+
+    - name: Making ports listen to 8080
+      lineinfile:
+        path: /etc/apache2/ports.conf
+        regexp: "^Listen 80"
+        line: "Listen 8080"
+        state: present
+        
+    - name: modifying default to 8080
+      lineinfile:
+        path: /etc/apache2/sites-enabled/000-default.conf
+        regexp: '^<VirtualHost \*:80>'
+        line: '<VirtualHost *:8080>'
+        state: present
+        
+    - name: Start Apache service
+      service:
+        name: apache2
+        state: started
+      become: yes
+
